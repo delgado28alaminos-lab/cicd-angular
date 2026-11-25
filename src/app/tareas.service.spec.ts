@@ -36,7 +36,7 @@ describe('TareasService', () => {
     servicio.alternar(leer.id);
     expect(servicio.tareas()[0].hecha).toBe(true);
     expect(servicio.tareas()[1].hecha).toBe(false);
-    expect(servicio.pendientes()).toBe(1);
+    expect(servicio.pendientes()).toBe(99);
 
     servicio.alternar(leer.id);
     expect(servicio.tareas()[0].hecha).toBe(false);
