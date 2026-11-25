@@ -31,6 +31,19 @@ jobs:
       - name: Instalar dependencias
         run: npm ci   # instala exactamente lo que dice package-lock.json
 
+      - name: Ejecutar tests con cobertura
+        # Tests unitarios (Vitest) en modo no interactivo. Si un test falla o la cobertura
+        # no llega a los umbrales de angular.json (80 % sentencias/funciones/líneas, 70 % ramas),
+        # este paso falla, el job build sale en rojo y la PR no se puede fusionar.
+        run: npx ng test --watch=false --coverage
+
+      - name: Subir informe de cobertura
+        if: always()   # también cuando los tests fallan, para poder revisar el informe
+        uses: actions/upload-artifact@v4
+        with:
+          name: informe-cobertura
+          path: coverage/
+
       - name: Compilar Angular
         # Si hay un error de compilación este paso falla y el job también (status check en rojo).
         run: npx ng build --base-href /cicd-angular/
