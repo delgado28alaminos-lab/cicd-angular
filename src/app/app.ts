@@ -8,5 +8,5 @@ import { RouterOutlet } from '@angular/router';
   templateUrl: './app.html',
 })
 export class App {
-  protected readonly title = signal('cicd-angular');
+  protected readonly title = signal('Práctica 4 CI/CD - Fernando Delgado');
 }
