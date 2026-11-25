@@ -1,0 +1,62 @@
+# Workflow de CI/CD para el proyecto Angular.
+name: Angular CI/CD
+
+# on: cuándo se ejecuta el workflow.
+#  - pull_request contra main -> CI: comprueba que el código compila antes de fusionar.
+#  - push a main -> CI + CD: tras fusionar, compila y despliega en GitHub Pages.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# jobs: trabajos del workflow. Por defecto se ejecutan en paralelo salvo que se use needs.
+jobs:
+  # ---------- CI: compilación ----------
+  build:
+    runs-on: ubuntu-latest   # máquina virtual limpia de GitHub
+    # permissions: permisos del GITHUB_TOKEN en este job (mínimo privilegio: solo leer el código).
+    permissions:
+      contents: read
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+
+      - name: Instalar Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci   # instala exactamente lo que dice package-lock.json
+
+      - name: Compilar Angular
+        # Si hay un error de compilación este paso falla y el job también (status check en rojo).
+        run: npx ng build --base-href /cicd-angular/
+
+      - name: Subir artefacto para Pages
+        # if: solo en push; en una PR no se publica nada.
+        if: github.event_name == 'push'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/cicd-angular/browser
+
+  # ---------- CD: despliegue en GitHub Pages ----------
+  deploy:
+    # needs: solo empieza cuando build ha terminado con éxito.
+    needs: build
+    # if: solo se ejecuta en push a main (nunca en pull requests).
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    # permissions: los mínimos que necesita deploy-pages.
+    permissions:
+      pages: write      # publicar en GitHub Pages
+      id-token: write   # token OIDC que verifica que el despliegue viene de este workflow
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Desplegar en GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
