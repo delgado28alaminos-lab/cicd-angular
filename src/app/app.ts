@@ -11,6 +11,6 @@ import { TareasService } from './tareas.service';
   styleUrl: './app.css',
 })
 export class App {
-
+  protected readonly title = signal('Práctica 4 CI/CD - Fernando Delgado');
   protected readonly tareas = inject(TareasService);
 }
